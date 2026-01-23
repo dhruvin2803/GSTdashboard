@@ -32,17 +32,37 @@ db.prepare(
   `
   CREATE TABLE IF NOT EXISTS clients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    file_no TEXT,
-    full_name TEXT,
-    gst_no TEXT,
+
+    -- Core identity
+    file_no TEXT UNIQUE,
+    client_name TEXT NOT NULL,
     mobile_no TEXT,
-    work_alloted_to TEXT,
-    group_from TEXT,
-    login_id TEXT,
-    password TEXT,
-    pan_no TEXT,
-    payment_type TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    email TEXT,
+    client_group_name TEXT,
+
+    -- Internal control
+    admin_group_id INTEGER NOT NULL,
+    assigned_employee_id INTEGER,
+
+    -- Services
+    services_opted TEXT CHECK(services_opted IN ('GST','INCOME_TAX','BOTH')) NOT NULL,
+
+    -- GST fields
+    gstin TEXT,
+    gst_user_id TEXT,
+    gst_password TEXT,
+    gst_filing_type TEXT CHECK(gst_filing_type IN ('MONTHLY','QUARTERLY')),
+
+    -- Income Tax fields
+    itr_v_status TEXT,
+    audit_status TEXT,
+    file_status TEXT,
+    fees_amount INTEGER,
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (admin_group_id) REFERENCES users(id),
+    FOREIGN KEY (assigned_employee_id) REFERENCES users(id)
   )
 `,
 ).run();

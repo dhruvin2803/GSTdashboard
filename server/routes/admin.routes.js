@@ -64,87 +64,94 @@ router.get("/audit-logs", (req, res) => {
   res.json(logs);
 });
 
-/* CREATE CLIENT */
 router.post("/clients", (req, res) => {
   const {
     file_no,
-    full_name,
-    gst_no,
+    client_name,
     mobile_no,
-    work_alloted_to,
-    group_from,
-    login_id,
-    password,
-    pan_no,
-    payment_type,
+    email,
+    client_group_name,
+
+    admin_group_id,
+    assigned_employee_id,
+
+    services_opted,
+
+    gstin,
+    gst_user_id,
+    gst_password,
+    gst_filing_type,
+
+    itr_v_status,
+    audit_status,
+    file_status,
+    fees_amount
   } = req.body;
 
-  const result = db
-    .prepare(
-      `
-      INSERT INTO clients (
-        file_no,
-        full_name,
-        gst_no,
-        mobile_no,
-        work_alloted_to,
-        group_from,
-        login_id,
-        password,
-        pan_no,
-        payment_type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    )
-    .run(
-      file_no || null,
-      full_name || null,
-      gst_no || null,
-      mobile_no || null,
-      work_alloted_to || null,
-      group_from || null,
-      login_id || null,
-      password || null,
-      pan_no || null,
-      payment_type || null,
-    );
+  if (!file_no || !client_name || !admin_group_id || !services_opted) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  const result = db.prepare(`
+    INSERT INTO clients (
+      file_no,
+      client_name,
+      mobile_no,
+      email,
+      client_group_name,
+      admin_group_id,
+      assigned_employee_id,
+      services_opted,
+      gstin,
+      gst_user_id,
+      gst_password,
+      gst_filing_type,
+      itr_v_status,
+      audit_status,
+      file_status,
+      fees_amount
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    file_no,
+    client_name,
+    mobile_no || null,
+    email || null,
+    client_group_name || null,
+    admin_group_id,
+    assigned_employee_id || null,
+    services_opted,
+    gstin || null,
+    gst_user_id || null,
+    gst_password || null,
+    gst_filing_type || null,
+    itr_v_status || null,
+    audit_status || null,
+    file_status || null,
+    fees_amount || null
+  );
 
   logAudit(
     req.user.id,
     "CREATE_CLIENT",
-    `Client created (ID: ${result.lastInsertRowid})`,
+    `Client created (ID: ${result.lastInsertRowid}, FILE: ${file_no})`
   );
 
   res.json({
     message: "Client created successfully",
-    clientId: result.lastInsertRowid,
+    client_id: result.lastInsertRowid
   });
 });
 
 router.get("/clients", (req, res) => {
-  const clients = db
-    .prepare(
-      `
-      SELECT
-        id,
-        file_no,
-        full_name,
-        gst_no,
-        mobile_no,
-        work_alloted_to,
-        group_from,
-        login_id,
-        password,
-        pan_no,
-        payment_type,
-        created_at
-      FROM clients
-      ORDER BY id ASC
-    `,
-    )
-    .all();
+  const clients = db.prepare(`
+    SELECT *
+    FROM clients
+    ORDER BY created_at DESC
+  `).all();
+
   res.json(clients);
 });
+
 
 /* DELETE CLIENT */
 router.delete("/clients/:id", (req, res) => {
@@ -167,64 +174,128 @@ router.delete("/clients/:id", (req, res) => {
   res.json({ message: "Client deleted successfully" });
 });
 
-/* UPDATE CLIENT */
+// Update Client
 router.put("/clients/:id", (req, res) => {
   const { id } = req.params;
 
   const {
     file_no,
-    full_name,
-    gst_no,
+    client_name,
     mobile_no,
-    work_alloted_to,
-    group_from,
-    login_id,
-    password,
-    pan_no,
-    payment_type,
+    email,
+    client_group_name,
+    admin_group_id,
+    assigned_employee_id,
+    services_opted,
+    gstin,
+    gst_user_id,
+    gst_password,
+    gst_filing_type,
+    itr_v_status,
+    audit_status,
+    file_status,
+    fees_amount
   } = req.body;
 
-  const result = db
-    .prepare(`
-      UPDATE clients SET
-        file_no = ?,
-        full_name = ?,
-        gst_no = ?,
-        mobile_no = ?,
-        work_alloted_to = ?,
-        group_from = ?,
-        login_id = ?,
-        password = ?,
-        pan_no = ?,
-        payment_type = ?
-      WHERE id = ?
-    `)
-    .run(
-      file_no || null,
-      full_name || null,
-      gst_no || null,
-      mobile_no || null,
-      work_alloted_to || null,
-      group_from || null,
-      login_id || null,
-      password || null,
-      pan_no || null,
-      payment_type || null,
-      id
-    );
+  const result = db.prepare(`
+    UPDATE clients SET
+      file_no = ?,
+      client_name = ?,
+      mobile_no = ?,
+      email = ?,
+      client_group_name = ?,
+      admin_group_id = ?,
+      assigned_employee_id = ?,
+      services_opted = ?,
+      gstin = ?,
+      gst_user_id = ?,
+      gst_password = ?,
+      gst_filing_type = ?,
+      itr_v_status = ?,
+      audit_status = ?,
+      file_status = ?,
+      fees_amount = ?
+    WHERE id = ?
+  `).run(
+    file_no,
+    client_name,
+    mobile_no || null,
+    email || null,
+    client_group_name || null,
+    admin_group_id,
+    assigned_employee_id || null,
+    services_opted,
+    gstin || null,
+    gst_user_id || null,
+    gst_password || null,
+    gst_filing_type || null,
+    itr_v_status || null,
+    audit_status || null,
+    file_status || null,
+    fees_amount || null,
+    id
+  );
 
   if (result.changes === 0) {
     return res.status(404).json({ message: "Client not found" });
   }
 
-  logAudit(
-    req.user.id,
-    "UPDATE_CLIENT",
-    `Client updated (ID: ${id})`
-  );
+  logAudit(req.user.id, "UPDATE_CLIENT", `Client updated (ID: ${id})`);
 
   res.json({ message: "Client updated successfully" });
 });
+
+router.get("/admins", (req, res) => {
+  const admins = db
+    .prepare("SELECT id, email FROM users WHERE role = 'admin'")
+    .all();
+  res.json(admins);
+});
+
+
+router.get("/employees", (req, res) => {
+  const employees = db
+    .prepare("SELECT id, email FROM users WHERE role = 'employee'")
+    .all();
+  res.json(employees);
+});
+
+// GET distinct client groups
+router.get("/client-groups", (req, res) => {
+  const groups = db.prepare(`
+    SELECT DISTINCT client_group_name
+    FROM clients
+    WHERE client_group_name IS NOT NULL
+      AND client_group_name != ''
+    ORDER BY client_group_name ASC
+  `).all();
+
+  res.json(groups.map(g => g.client_group_name));
+});
+
+
+
+// // 2. SEED ADMIN USER (With Bcrypt Hashing)
+// const seedAdmin = async () => {
+//   const adminEmail = 'dhruvinbhayani000@gmail.com';
+//   const plainPassword = '1234';
+  
+//   const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
+
+//   if (!existingUser) {
+//     // Hash the password so the login route can verify it
+//     const hashedPassword = await bcrypt.hash(plainPassword, 10);
+    
+//     db.prepare(`
+//       INSERT INTO users (email, password, role) 
+//       VALUES (?, ?, ?)
+//     `).run(adminEmail, hashedPassword, 'admin');
+    
+//     console.log(`✅ Admin user ${adminEmail} created with hashed password.`);
+//   }
+// };
+
+// seedAdmin();
 
 
 module.exports = router;
